@@ -33,10 +33,18 @@ Pas bestanden aan, verhoog `CACHE` in `sw.js` (bijv. `volleybeert-v1.0.1`) en pu
 
 ## Lokaal testen
 
+Gewoon in de browser op de computer kan prima. Start vanuit deze map een webservertje
+(dubbelklikken op `index.html` werkt níet, ES-modules en de service worker hebben een server nodig):
+
 ```
 python -m http.server 8000
 ```
-en open `http://localhost:8000`.
+en open `http://localhost:8000` in Chrome of Edge.
+
+- **Telefoon/tablet nabootsen:** druk F12 › klik het telefoon-icoon (*Toggle device toolbar*, Ctrl+Shift+M) en kies bijv. iPhone of iPad. Dan kun je ook met "touch" slepen op het tactiekbord.
+- **Wijzigingen zien:** de service worker bewaart de app in de cache. Na het aanpassen van bestanden: F12 › *Application* › *Service workers* › vink *Update on reload* aan, of doe Ctrl+Shift+R.
+- **Opnieuw beginnen:** F12 › *Application* › *Storage* › *Clear site data* wist alle lokale gegevens (teams, borden, pincode).
+- **Op je eigen telefoon in hetzelfde wifi-netwerk:** start de server met `python -m http.server 8000 --bind 0.0.0.0` en open `http://<ip-van-je-pc>:8000` (ip vind je met `ipconfig`). Let op: via een ip-adres zonder https werken offline-gebruik en *installeren* niet; voor die twee test je de echte GitHub Pages-link.
 
 ## Opbouw
 
