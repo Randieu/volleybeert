@@ -98,6 +98,7 @@ export function mountBoard(host, initial, opts = {}) {
       ${mode === "pen" || mode === "arrow" ? seg(Object.entries(PENS).map(([k, v]) => [k, v.naam]), pen, "data-bpen") + (mode === "pen" ? `<label class="bchk"><input type="checkbox" data-bhead ${head ? "checked" : ""}> Pijlpunt</label>` : "") : ""}
       <span class="bsp"></span>
       <button type="button" class="bbtn" data-bact="undo" ${undo.length ? "" : "disabled"}>↶ <span class="bt">Ongedaan</span></button>
+      <button type="button" class="bbtn" data-bact="rot" aria-label="Veld een kwartslag draaien" title="Veld een kwartslag draaien">⟳ <span class="bt">Draai</span></button>
       <button type="button" class="bbtn bmore" data-bact="more" aria-expanded="${more}" aria-label="Meer opties">⋯</button>
       <button type="button" class="bbtn" data-bact="big">${big ? "✕ <span class='bt'>Klein</span>" : "⛶ <span class='bt'>Groot</span>"}</button>
     </div>
@@ -107,19 +108,25 @@ export function mountBoard(host, initial, opts = {}) {
     <div class="brow bveld${more ? " open" : ""}">
       ${seg([["heel", "Heel veld"], ["half", "Eigen helft"]], B.half ? "half" : "heel", "data-bhalf")}
       ${seg([["0.8", "S"], ["1", "M"], ["1.3", "L"]], String(B.size), "data-bsize")}
+      ${seg([["auto", "Automatisch"], ["staand", "Staand"], ["liggend", "Liggend"]], rotPref, "data-brot")}
       <button type="button" class="bbtn" data-bpre="66">6 tegen 6</button><button type="button" class="bbtn" data-bpre="6">Eigen 6</button>
       <button type="button" class="bbtn" data-bact="lines">Wis lijnen</button><button type="button" class="bbtn" data-bpre="leeg">Alles leeg</button>
     </div>
     ${s ? `<div class="brow bselrow"><label class="blabel">Tekst <input data-blabel maxlength="3" value="${esc(s.l || "")}" autocomplete="off"></label><button type="button" class="bbtn" data-bact="del">Verwijder</button><button type="button" class="bbtn" data-bact="desel">Klaar</button></div>` : ""}`;
   }
-  let land = false;
+  // Veldrichting: "auto" draait mee met de schermvorm, "staand"/"liggend" ligt vast (onthouden op dit apparaat).
+  let rotPref = "auto", autoLand = false, land = false;
+  try { const v = localStorage.getItem("vb-veld"); if (v === "staand" || v === "liggend") rotPref = v; } catch (e) {}
+  const applyRot = () => { const l = rotPref === "auto" ? autoLand : rotPref === "liggend"; if (l === land) return false; land = l; return true; };
+  const setRot = (v) => { rotPref = v; try { localStorage.setItem("vb-veld", v); } catch (e) {} applyRot(); draw(); paintTools(); };
+  applyRot();
   function draw() {
     svg.setAttribute("viewBox", land ? (B.half ? "-19.4 -1.2 11.8 11.4" : "-19.2 -1.2 20.4 11.4") : viewBox(B));
     svg.innerHTML = `${defs(pfx)}<g class="world"${land ?  ' transform="rotate(90)"' : ""}>${courtSVG(B)}<g class="blines${mode === "gum" ? " gum" : ""}">${B.ln.map((l, i) => lineSVG(l, i, B, pfx, true)).join("")}</g><g class="blive"></g><g class="btoks${mode === "move" ? "" : " off"}">${B.tok.map((o) => tokSVG(o, B, o.id === sel, true, land)).join("")}</g></g>`;
   }
   const pt = (e) => { const w = svg.querySelector(".world") || svg; const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const m = w.getScreenCTM(); if (!m) return [0, 0]; const q = p.matrixTransform(m.inverse()); return [q.x, q.y]; };
   const stage = host.querySelector(".bstage");
-  const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); const l = r.width > r.height * 1.15; if (l !== land && !drag && !live) { land = l; draw(); } }) : null;
+  const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); autoLand = r.width > r.height * 1.15; if (!drag && !live && applyRot()) draw(); }) : null;
   if (ro) ro.observe(stage);
   let drag = null, live = null;
   function liveDraw() {
@@ -190,12 +197,14 @@ export function mountBoard(host, initial, opts = {}) {
       B.tok.push(o); sel = o.id; mode = "move"; draw(); paintTools(); changed();
     }
     else if (b.dataset.bhalf) { push(); B.half = b.dataset.bhalf === "half"; draw(); paintTools(); changed(); }
+    else if (b.dataset.brot) setRot(b.dataset.brot);
     else if (b.dataset.bsize) { B.size = +b.dataset.bsize; draw(); paintTools(); changed(); }
     else if (b.dataset.bpre) { push(); const keep = B.size; B = b.dataset.bpre === "leeg" ? Object.assign(emptyBoard(), { half: B.half }) : presetBoard(b.dataset.bpre); B.size = keep; sel = null; draw(); paintTools(); changed(); }
     else if (b.dataset.bact) {
       const a = b.dataset.bact;
       if (a === "undo" && undo.length) { B = normBoard(JSON.parse(undo.pop())); if (!B.tok.some((t) => t.id === sel)) sel = null; draw(); paintTools(); changed(); }
       else if (a === "big") setBig(!big);
+      else if (a === "rot") setRot(land ? "staand" : "liggend");
       else if (a === "more") { more = !more; paintTools(); }
       else if (a === "lines" && B.ln.length) { push(); B.ln = []; draw(); paintTools(); changed(); }
       else if (a === "del" && sel) { push(); B.tok = B.tok.filter((t) => t.id !== sel); sel = null; draw(); paintTools(); changed(); }

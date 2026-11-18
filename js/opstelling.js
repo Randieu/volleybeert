@@ -23,11 +23,14 @@ function whereIs(s, id) { for (const k in s.pos) if (s.pos[k] === id) return { p
 function removeFrom(s, id) { for (const k in s.pos) if (s.pos[k] === id) s.pos[k] = null; s.bank = s.bank.filter((x) => x !== id); }
 const saveM = () => save("matches");
 
+// Aanvoerder (C) en vice-aanvoerder (VC) liggen per team vast.
+export const capOf = (t, id) => (t && id ? (t.cap === id ? "C" : t.vcap === id ? "VC" : "") : "");
+export const capBadge = (t, id) => { const c = capOf(t, id); return c ? `<span class="cap" title="${c === "C" ? "Aanvoerder" : "Vice-aanvoerder"}">${c}</span>` : ""; };
 export const rolSelect = (attrs, val) => `<select ${attrs}>${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${(val || "") === k ? " selected" : ""}>${v}</option>`).join("")}</select>`;
 function chip(p, rol) {
   if (!p) return ""; const r = rol === undefined ? p.rol || "" : rol;
   const nr = p.nr ? String(p.nr) : (p.naam || "?").slice(0, 1).toUpperCase();
-  return `<span class="chip r-${r || "x"}${isInv(p.id) ? " inv" : ""}" role="button" tabindex="0" data-pid="${p.id}" aria-pressed="${opSel === p.id}"><span class="nr">${esc(nr)}</span><span class="nm">${esc(p.naam || "Naamloos")}</span>${r ? `<span class="rl">${ROLK[r]}</span>` : ""}${isInv(p.id) ? `<span class="rl">inv</span>` : ""}</span>`;
+  return `<span class="chip r-${r || "x"}${isInv(p.id) ? " inv" : ""}" role="button" tabindex="0" data-pid="${p.id}" aria-pressed="${opSel === p.id}"><span class="nr">${esc(nr)}</span><span class="nm">${esc(p.naam || "Naamloos")}</span>${capBadge(team(), p.id)}${r ? `<span class="rl">${ROLK[r]}</span>` : ""}${isInv(p.id) ? `<span class="rl">inv</span>` : ""}</span>`;
 }
 function slot(k) {
   const id = cur().sets[opSet].pos[k]; const p = id && P(id);
@@ -65,7 +68,7 @@ function setView() {
     <div class="col">
       <div class="zone" data-drop="bank" role="button" tabindex="0"><h3>Wissels (${s.bank.length})</h3>${s.bank.map((id) => chip(P(id), rolIn(opSet, id))).join("") || `<span class="hint">${opSel ? "Tik hier om op de bank te zetten" : "Nog geen wissels"}</span>`}</div>
       <div class="zone" data-drop="none" role="button" tabindex="0"><h3>Niet opgesteld (${free.length})</h3>${free.map((p) => chip(p)).join("") || `<span class="hint">${team().spelers.length ? "Iedereen is ingedeeld" : "Voeg eerst spelers toe bij Team"}</span>`}</div>
-      <div class="zone static"><h3>Rollen in set ${opSet}</h3>${inSet.length ? `<ul class="setroles">${inSet.map((p) => { const own = p.rol || ""; const r = rolIn(opSet, p.id); return `<li><span class="nm">${esc(p.naam)}</span>${rolSelect(`data-setrol="${p.id}" aria-label="Rol ${esc(p.naam)}"`, r)}${r !== own ? `<span class="tag">aangepast</span>` : ""}</li>`; }).join("")}</ul>` : `<span class="hint">Zet eerst spelers op het veld of de bank.</span>`}</div>
+      <div class="zone static"><h3>Rollen in set ${opSet}</h3>${inSet.length ? `<ul class="setroles">${inSet.map((p) => { const own = p.rol || ""; const r = rolIn(opSet, p.id); return `<li><span class="nm">${esc(p.naam)}${capBadge(team(), p.id)}</span>${rolSelect(`data-setrol="${p.id}" aria-label="Rol ${esc(p.naam)}"`, r)}${r !== own ? `<span class="tag">aangepast</span>` : ""}</li>`; }).join("")}</ul>` : `<span class="hint">Zet eerst spelers op het veld of de bank.</span>`}</div>
       <label class="zone static"><h3>Notitie set ${opSet}</h3><textarea data-m="note" placeholder="Bijv. afspraken, wissel na 12 punten…">${esc(s.notitie)}</textarea></label>
       <div class="zone static"><h3>Invallers deze wedstrijd (${m.invallers.length})</h3>
         <p class="hint full">Spelers van buiten het team. Ze staan alleen bij deze wedstrijd.</p>

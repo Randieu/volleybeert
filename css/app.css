@@ -241,3 +241,7 @@ body.bord-open,body.ov-open,body.locked{overflow:hidden}
 .slot .chip .nm{font-size:13px;max-width:100%}
 .slot .chip .rl{display:none}
 .doc h1,.doc h2,.doc h3,.doc h4{font-size:19px;margin:12px 0 6px;text-transform:none}
+/* Aanvoerder (C) en vice-aanvoerder (VC) */
+.cap{display:inline-grid;place-items:center;flex:none;min-width:22px;height:20px;padding:0 5px;border-radius:6px;background:var(--court);color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1}
+.caps{margin-bottom:12px}
+.setroles .nm .cap{margin-left:6px;vertical-align:1px}

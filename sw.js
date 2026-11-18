@@ -1,5 +1,5 @@
 // Service worker: bewaart de app op het apparaat zodat hij offline werkt.
-const CACHE = "volleybeert-v1.0.0";
+const CACHE = "volleybeert-v1.1.0";
 const ASSETS = [
   "./", "./index.html", "./css/app.css", "./manifest.webmanifest",
   "./js/app.js", "./js/db.js", "./js/state.js", "./js/share.js", "./js/ui.js", "./js/board.js", "./js/bordview.js", "./js/opstelling.js", "./js/team.js", "./js/trainingen.js",

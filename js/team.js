@@ -5,6 +5,7 @@ import { pack, shareOrDownload, safeName, EXT } from "./share.js";
 import { toast } from "./ui.js";
 
 let confirmDel = false, renaming = false;
+const capSelect = (k, t) => `<select data-cap="${k}"><option value="">Geen</option>${t.spelers.map((p) => `<option value="${p.id}"${t[k] === p.id ? " selected" : ""}>${esc((p.nr ? p.nr + " · " : "") + (p.naam || "Naamloos"))}</option>`).join("")}</select>`;
 
 export function render(el) {
   const t = team();
@@ -21,7 +22,11 @@ export function render(el) {
         ${rolSelect('name="rol" aria-label="Vaste rol"', "")}
         <button class="btn" type="submit">Speler toevoegen</button>
       </form>
-      ${t.spelers.length ? `<p class="lbl">${t.spelers.length} spelers · vaste rol (per set aan te passen bij Opstelling)</p>
+      ${t.spelers.length ? `<div class="fields caps">
+        <label>Aanvoerder (C)${capSelect("cap", t)}</label>
+        <label>Vice-aanvoerder (VC)${capSelect("vcap", t)}</label>
+      </div>
+      <p class="lbl">${t.spelers.length} spelers · vaste rol (per set aan te passen bij Opstelling)</p>
       <ul class="roster">${t.spelers.map((p) => `<li>
         <input value="${esc(p.nr || "")}" data-edit="nr" data-id="${p.id}" aria-label="Rugnummer" maxlength="3" inputmode="numeric">
         <input value="${esc(p.naam)}" data-edit="naam" data-id="${p.id}" aria-label="Naam" maxlength="40">
@@ -49,11 +54,16 @@ export function render(el) {
   root.addEventListener("change", (e) => {
     const x = e.target;
     if (x.dataset.a === "pick") { S.settings.teamId = x.value; save("settings"); confirmDel = false; rr(); return; }
+    if (x.dataset.cap) {
+      const k = x.dataset.cap, other = k === "cap" ? "vcap" : "cap";
+      t[k] = x.value; if (x.value && t[other] === x.value) t[other] = "";
+      save("teams"); rr(); return;
+    }
     if (x.dataset.edit) { const p = t.spelers.find((q) => q.id === x.dataset.id); if (p) { p[x.dataset.edit] = x.value.trim(); save("teams"); } }
   });
   root.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-a],[data-del]"); if (!b) return;
-    if (b.dataset.del) { t.spelers = t.spelers.filter((p) => p.id !== b.dataset.del); save("teams"); rr(); return; }
+    if (b.dataset.del) { if (t.cap === b.dataset.del) t.cap = ""; if (t.vcap === b.dataset.del) t.vcap = ""; t.spelers = t.spelers.filter((p) => p.id !== b.dataset.del); save("teams"); rr(); return; }
     const a = b.dataset.a;
     if (a === "rename") { renaming = true; rr(); el.querySelector('[data-f="rename"] input').select(); }
     if (a === "newteam") { const n = { id: uid("t"), naam: "Nieuw team", spelers: [] }; S.teams.push(n); S.settings.teamId = n.id; renaming = true; save("teams"); save("settings"); rr(); el.querySelector('[data-f="rename"] input').select(); }
@@ -65,7 +75,7 @@ export function render(el) {
       save("teams"); save("matches"); save("settings"); rr();
     }
     if (a === "share") {
-      const r = await shareOrDownload(pack("team", { naam: t.naam, spelers: t.spelers }), safeName("Team " + t.naam) + EXT, { title: "Team " + t.naam });
+      const r = await shareOrDownload(pack("team", { naam: t.naam, spelers: t.spelers, cap: t.cap || "", vcap: t.vcap || "" }), safeName("Team " + t.naam) + EXT, { title: "Team " + t.naam });
       if (r === "downloaded") toast("Bestand opgeslagen in je downloads");
     }
   });

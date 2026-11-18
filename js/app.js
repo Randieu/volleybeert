@@ -9,7 +9,7 @@ import { normBoard } from "./board.js";
 import { pack, readPack, pickFile, shareOrDownload, blobToB64, b64ToBlob, EXT } from "./share.js";
 import { toast } from "./ui.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const $ = (s) => document.querySelector(s);
 const view = () => $("#view");
 let deferredInstall = null;
@@ -54,7 +54,8 @@ document.addEventListener("visibilitychange", () => {
 export async function importFile(file) {
   let o; try { o = await readPack(file); } catch (e) { toast(e.message); return; }
   if (o.type === "team") {
-    const t = { id: uid("t"), naam: o.data.naam || "Gedeeld team", spelers: (o.data.spelers || []).map((p) => ({ ...p, id: uid("p") })) };
+    const ids = {}, t = { id: uid("t"), naam: o.data.naam || "Gedeeld team", spelers: (o.data.spelers || []).map((p) => ({ ...p, id: (ids[p.id] = uid("p")) })) };
+    t.cap = ids[o.data.cap] || ""; t.vcap = ids[o.data.vcap] || "";
     S.teams.push(t); S.settings.teamId = t.id; save("teams"); save("settings"); toast(`Team "${t.naam}" toegevoegd`); location.hash = "team";
   } else if (o.type === "board") {
     S.boards.push({ id: uid("b"), naam: o.data.naam || "Gedeeld bord", updated: Date.now(), state: normBoard(o.data.state) }); save("boards"); toast("Bord toegevoegd aan Mijn borden"); location.hash = "bord";
