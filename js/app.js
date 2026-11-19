@@ -9,7 +9,7 @@ import { normBoard } from "./board.js";
 import { pack, readPack, pickFile, shareOrDownload, blobToB64, b64ToBlob, EXT } from "./share.js";
 import { toast } from "./ui.js";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const $ = (s) => document.querySelector(s);
 const view = () => $("#view");
 let deferredInstall = null;

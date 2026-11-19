@@ -81,6 +81,7 @@ export function mountBoard(host, initial, opts = {}) {
   const pfx = "b" + Math.random().toString(36).slice(2, 7);
   host.innerHTML = `<div class="bord"><div class="btools"></div><div class="bstage"><svg class="bsvg" role="img" aria-label="Volleybalveld om op te tekenen" preserveAspectRatio="xMidYMid meet"></svg></div></div>`;
   const root = host.querySelector(".bord"), tools = host.querySelector(".btools"), svg = host.querySelector(".bsvg");
+  const phone = () => !!(window.matchMedia && matchMedia("(max-width: 760px)").matches);
   const changed = () => { if (opts.onChange) opts.onChange(clone(B)); };
   const push = () => { undo.push(JSON.stringify(B)); if (undo.length > 80) undo.shift(); };
 
@@ -93,24 +94,28 @@ export function mountBoard(host, initial, opts = {}) {
   function paintTools() {
     const seg = (arr, cur, attr) => `<div class="bseg" role="group">${arr.map((a) => `<button type="button" class="bbtn${cur === a[0] ? " on" : ""}" ${attr}="${a[0]}" aria-pressed="${cur === a[0]}">${a[1]}</button>`).join("")}</div>`;
     const s = B.tok.find((o) => o.id === sel);
-    tools.innerHTML = `<div class="brow">
-      ${seg([["move", "✋ Verplaats"], ["pen", "✏️ Pen"], ["arrow", "➝ Pijl"], ["gum", "⌫ Gum"]], mode, "data-bmode")}
-      ${mode === "pen" || mode === "arrow" ? seg(Object.entries(PENS).map(([k, v]) => [k, v.naam]), pen, "data-bpen") + (mode === "pen" ? `<label class="bchk"><input type="checkbox" data-bhead ${head ? "checked" : ""}> Pijlpunt</label>` : "") : ""}
+    tools.innerHTML = `<div class="brow bmain">
+      ${seg([["move", "✋<span class='bt'> Verplaats</span>"], ["pen", "✏️<span class='bt'> Pen</span>"], ["arrow", "➝<span class='bt'> Pijl</span>"], ["gum", "⌫<span class='bt'> Gum</span>"]], mode, "data-bmode")}
       <span class="bsp"></span>
-      <button type="button" class="bbtn" data-bact="undo" ${undo.length ? "" : "disabled"}>↶ <span class="bt">Ongedaan</span></button>
-      <button type="button" class="bbtn" data-bact="rot" aria-label="Veld een kwartslag draaien" title="Veld een kwartslag draaien">⟳ <span class="bt">Draai</span></button>
-      <button type="button" class="bbtn bmore" data-bact="more" aria-expanded="${more}" aria-label="Meer opties">⋯</button>
-      <button type="button" class="bbtn" data-bact="big">${big ? "✕ <span class='bt'>Klein</span>" : "⛶ <span class='bt'>Groot</span>"}</button>
+      <button type="button" class="bbtn" data-bact="undo" ${undo.length ? "" : "disabled"} aria-label="Ongedaan maken">↶ <span class="bt">Ongedaan</span></button>
+      <button type="button" class="bbtn brotq" data-bact="rot" aria-label="Veld een kwartslag draaien" title="Veld een kwartslag draaien">⟳ <span class="bt">Draai</span></button>
+      <button type="button" class="bbtn bmore${more ? " on" : ""}" data-bact="more" aria-expanded="${more}" aria-label="Toevoegen en meer opties">＋<span class="bt"> Meer</span></button>
+      <button type="button" class="bbtn" data-bact="big" aria-label="${big ? "Klein" : "Groot"}">${big ? "✕ <span class='bt'>Klein</span>" : "⛶ <span class='bt'>Groot</span>"}</button>
     </div>
-    <div class="brow">
-      ${Object.entries(TYPES).map(([k, v]) => `<button type="button" class="bbtn add" data-badd="${k}" aria-label="${v.naam} neerzetten"><i class="bdot ${k}"></i><span class="bt">${v.naam}</span></button>`).join("")}
-    </div>
-    <div class="brow bveld${more ? " open" : ""}">
-      ${seg([["heel", "Heel veld"], ["half", "Eigen helft"]], B.half ? "half" : "heel", "data-bhalf")}
-      ${seg([["0.8", "S"], ["1", "M"], ["1.3", "L"]], String(B.size), "data-bsize")}
-      ${seg([["auto", "Automatisch"], ["staand", "Staand"], ["liggend", "Liggend"]], rotPref, "data-brot")}
-      <button type="button" class="bbtn" data-bpre="66">6 tegen 6</button><button type="button" class="bbtn" data-bpre="6">Eigen 6</button>
-      <button type="button" class="bbtn" data-bact="lines">Wis lijnen</button><button type="button" class="bbtn" data-bpre="leeg">Alles leeg</button>
+    ${mode === "pen" || mode === "arrow" ? `<div class="brow bpenrow">${seg(Object.entries(PENS).map(([k, v]) => [k, v.naam]), pen, "data-bpen")}${mode === "pen" ? `<label class="bchk"><input type="checkbox" data-bhead ${head ? "checked" : ""}> Pijlpunt</label>` : ""}</div>` : ""}
+    <div class="bpanel${more ? " open" : ""}">
+      <div class="bphead"><b>Toevoegen</b><button type="button" class="bbtn" data-bact="more" aria-label="Menu sluiten">✕</button></div>
+      <div class="brow badds">
+        ${Object.entries(TYPES).map(([k, v]) => `<button type="button" class="bbtn add" data-badd="${k}" aria-label="${v.naam} neerzetten"><i class="bdot ${k}"></i><span class="bt">${v.naam}</span></button>`).join("")}
+      </div>
+      <b class="bphead2">Veld</b>
+      <div class="brow bveld">
+        ${seg([["heel", "Heel veld"], ["half", "Eigen helft"]], B.half ? "half" : "heel", "data-bhalf")}
+        ${seg([["auto", "Automatisch"], ["staand", "Staand"], ["liggend", "Liggend"]], rotPref, "data-brot")}
+        ${seg([["0.8", "S"], ["1", "M"], ["1.3", "L"]], String(B.size), "data-bsize")}
+        <button type="button" class="bbtn" data-bpre="66">6 tegen 6</button><button type="button" class="bbtn" data-bpre="6">Eigen 6</button>
+        <button type="button" class="bbtn" data-bact="lines">Wis lijnen</button><button type="button" class="bbtn" data-bpre="leeg">Alles leeg</button>
+      </div>
     </div>
     ${s ? `<div class="brow bselrow"><label class="blabel">Tekst <input data-blabel maxlength="3" value="${esc(s.l || "")}" autocomplete="off"></label><button type="button" class="bbtn" data-bact="del">Verwijder</button><button type="button" class="bbtn" data-bact="desel">Klaar</button></div>` : ""}`;
   }
@@ -134,6 +139,7 @@ export function mountBoard(host, initial, opts = {}) {
     g.innerHTML = live.p.length > 1 ? `<path d="${pathD(live.p)}" fill="none" stroke="${p.c}" stroke-width="${lineW(B)}" stroke-linecap="round" stroke-linejoin="round" ${p.d ? `stroke-dasharray="${p.d}"` : ""} ${live.h ? `marker-end="url(#${pfx}-${live.c})"` : ""}/>` : "";
   }
   svg.addEventListener("pointerdown", (e) => {
+    if (more && phone()) { more = false; paintTools(); return; }
     const p = pt(e);
     if (mode === "move") {
       const g = e.target.closest(".btok");
@@ -189,17 +195,17 @@ export function mountBoard(host, initial, opts = {}) {
 
   tools.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
-    if (b.dataset.bmode) { mode = b.dataset.bmode; if (mode !== "move") sel = null; draw(); paintTools(); }
+    if (b.dataset.bmode) { mode = b.dataset.bmode; more = false; if (mode !== "move") sel = null; draw(); paintTools(); }
     else if (b.dataset.bpen) { pen = b.dataset.bpen; paintTools(); }
     else if (b.dataset.badd) {
       push(); const t = b.dataset.badd; const n = B.tok.length % 5;
       const o = { id: uid("k"), t, l: nextLabel(t), x: 2 + n * 1.25, y: t === "grijs" ? 4.5 : (B.half || t === "blauw" ? 13.5 : 4.5) };
-      B.tok.push(o); sel = o.id; mode = "move"; draw(); paintTools(); changed();
+      B.tok.push(o); sel = o.id; mode = "move"; if (phone()) more = false; draw(); paintTools(); changed();
     }
     else if (b.dataset.bhalf) { push(); B.half = b.dataset.bhalf === "half"; draw(); paintTools(); changed(); }
     else if (b.dataset.brot) setRot(b.dataset.brot);
     else if (b.dataset.bsize) { B.size = +b.dataset.bsize; draw(); paintTools(); changed(); }
-    else if (b.dataset.bpre) { push(); const keep = B.size; B = b.dataset.bpre === "leeg" ? Object.assign(emptyBoard(), { half: B.half }) : presetBoard(b.dataset.bpre); B.size = keep; sel = null; draw(); paintTools(); changed(); }
+    else if (b.dataset.bpre) { push(); const keep = B.size; B = b.dataset.bpre === "leeg" ? Object.assign(emptyBoard(), { half: B.half }) : presetBoard(b.dataset.bpre); B.size = keep; sel = null; if (phone()) more = false; draw(); paintTools(); changed(); }
     else if (b.dataset.bact) {
       const a = b.dataset.bact;
       if (a === "undo" && undo.length) { B = normBoard(JSON.parse(undo.pop())); if (!B.tok.some((t) => t.id === sel)) sel = null; draw(); paintTools(); changed(); }

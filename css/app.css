@@ -245,3 +245,38 @@ body.bord-open,body.ov-open,body.locked{overflow:hidden}
 .cap{display:inline-grid;place-items:center;flex:none;min-width:22px;height:20px;padding:0 5px;border-radius:6px;background:var(--court);color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1}
 .caps{margin-bottom:12px}
 .setroles .nm .cap{margin-left:6px;vertical-align:1px}
+
+/* Bord-tab: veld vult het scherm, pagina scrolt niet */
+body.bordtab{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;overscroll-behavior:none}
+body.bordtab .main{flex:1 1 auto;min-height:0;width:100%;max-width:none;padding:8px max(8px,env(safe-area-inset-right)) 8px max(8px,env(safe-area-inset-left));display:flex}
+.bordpage{flex:1 1 auto;min-height:0;gap:8px}
+.bbar{display:flex;align-items:center;gap:8px}
+.bbname{display:flex;flex-direction:column;line-height:1.15;margin-right:auto;min-width:0}
+.bbname small{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--court-ink)}
+.bbname b{font-family:var(--fd);font-size:20px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bordpage .boardhost{flex:1 1 auto;min-height:0;display:flex}
+.bordpage .bord{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px}
+.bordpage .bstage{flex:1 1 auto;height:auto;min-height:0}
+.bsheet{position:fixed;inset:0;z-index:60;background:rgba(11,17,36,.45);display:flex;align-items:flex-end;justify-content:center}
+.bsheetin{background:var(--bg);width:min(900px,100%);max-height:88dvh;overflow:auto;overscroll-behavior:contain;border-radius:18px 18px 0 0;padding:16px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.bsheetin .trow{justify-content:space-between}
+
+/* werkbalk van het bord */
+.bord{position:relative}
+.bphead,.bphead2{display:none}
+.bpanel{display:grid;gap:8px}
+.bpanel .bveld{display:none}.bpanel.open .bveld{display:flex}
+.bbtn.on{border-color:var(--court);color:var(--court-ink)}
+@media (max-width:760px){
+  .btools{padding:6px;gap:6px;border-radius:12px}
+  .brotq{display:none}
+  .bpanel{display:none}
+  .bpanel.open{display:grid;position:absolute;left:0;right:0;bottom:0;z-index:5;max-height:80%;overflow:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 -6px 24px rgba(0,0,0,.22)}
+  .bpanel.open .bphead{display:flex;align-items:center;justify-content:space-between}
+  .bpanel.open .bphead2{display:block;margin-top:4px}
+  .bpanel .bphead b,.bphead2{font-family:var(--fd);font-size:18px;text-transform:uppercase;letter-spacing:.02em}
+  .bpanel .badds .bbtn .bt{display:inline}
+  .bpanel .badds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bpanel .badds .bbtn{justify-content:flex-start}
+  .bmain .bseg .bbtn{min-width:42px;justify-content:center}
+}
